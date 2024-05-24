@@ -44,7 +44,7 @@ contract BatchAirdrop is ReentrancyGuard {
             totalAmount += _amount[i];
         }
 
-        require(msg.value >= totalAmount + fee, "BatchAirdrop: value not enough");
+        require(msg.value == totalAmount + fee, "BatchAirdrop: msg.value not match with totalAmount + fee");
 
         if (fee > 0) {
             payable(owner).transfer(fee);
