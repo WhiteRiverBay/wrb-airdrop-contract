@@ -12,8 +12,16 @@ contract BatchAirdrop is ReentrancyGuard {
 
     uint256 public fee;
 
-    constructor(address _owner) {
-        owner = _owner;
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
+    event FeeChanged(uint256 previousFee, uint256 newFee);
+    event AirdropCoin(uint256 addressCount, uint256 totalAmount);
+    event AirdropToken(uint256 addressCount, uint256 totalAmount);
+
+    constructor() {
+        owner = msg.sender;
     }
 
     modifier onlyOwner() {
@@ -23,20 +31,19 @@ contract BatchAirdrop is ReentrancyGuard {
 
     function setOwner(address _owner) public onlyOwner {
         owner = _owner;
-    }   
+        emit OwnershipTransferred(owner, _owner);
+    }
 
     function setFee(uint256 _fee) public onlyOwner {
         fee = _fee;
+        emit FeeChanged(fee, _fee);
     }
 
     function airdropCoin(
         address[] memory _to,
         uint256[] memory _amount
     ) public payable nonReentrant {
-        require(
-            _to.length == _amount.length,
-            "BatchAirdrop: length not match"
-        );
+        require(_to.length == _amount.length, "BatchAirdrop: length not match");
 
         uint256 totalAmount = 0;
 
@@ -44,16 +51,22 @@ contract BatchAirdrop is ReentrancyGuard {
             totalAmount += _amount[i];
         }
 
-        require(msg.value == totalAmount + fee, "BatchAirdrop: msg.value not match with totalAmount + fee");
+        require(
+            msg.value == totalAmount + fee,
+            "BatchAirdrop: msg.value not match with totalAmount + fee"
+        );
 
         if (fee > 0) {
-            payable(owner).transfer(fee);
+            (bool success, ) = owner.call{value: fee}("");
+            require(success, "BatchAirdrop: transfer failed");
         }
 
         for (uint256 i = 0; i < _to.length; i++) {
             (bool success, ) = _to[i].call{value: _amount[i]}("");
             require(success, "BatchAirdrop: transfer failed");
         }
+
+        emit AirdropCoin(_to.length, totalAmount);
     }
 
     function airdropToken(
@@ -61,14 +74,12 @@ contract BatchAirdrop is ReentrancyGuard {
         address[] memory _to,
         uint256[] memory _amount
     ) public payable nonReentrant {
-        require(
-            _to.length == _amount.length,
-            "BatchAirdrop: length not match"
-        );
+        require(_to.length == _amount.length, "BatchAirdrop: length not match");
 
         require(msg.value >= fee, "BatchAirdrop: value not enough");
         if (fee > 0) {
-            payable(owner).transfer(fee);
+            (bool success, ) = owner.call{value: fee}("");
+            require(success, "BatchAirdrop: transfer failed");
         }
 
         uint256 totalAmount = 0;
@@ -86,6 +97,7 @@ contract BatchAirdrop is ReentrancyGuard {
         for (uint256 i = 0; i < _to.length; i++) {
             SafeERC20.safeTransfer(IERC20(_token), _to[i], _amount[i]);
         }
+
+        emit AirdropToken(_to.length, totalAmount);
     }
 }
-
