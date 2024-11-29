@@ -1,5 +1,10 @@
 ## wrb airdrop contract
 
+### Deployment
+
+EVM(eth, base, bsc, arb one, polygon)：**0xE9511e55d2AaC1F62D7e3110f7800845dB2a31F1**
+TRON：**TNnHipM7aZMYYanXhESgRV9NmjndcgvaXu**
+
 This contract is used to airdrop coins and tokens.
 
 ## Foundry
