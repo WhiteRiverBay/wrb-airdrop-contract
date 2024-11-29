@@ -19,7 +19,7 @@ contract BatchAirdropTest is Test {
     ERC20Token public token;
 
     function setUp() public {
-        airdrop = new BatchAirdrop(address(this));
+        airdrop = new BatchAirdrop();
         airdrop.setFee(100);
 
         token = new ERC20Token();
